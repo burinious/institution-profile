@@ -6,7 +6,10 @@
     <section class="directory-hero-card">
       <div class="directory-hero-copy-block">
         <span class="eyebrow">Staff Directory</span>
-        <h1>BOUESTI staff directory.</h1>
+        <h1>Meet the minds shaping BOUESTI.</h1>
+        <p class="hero-copy">
+          Explore standout academics, researchers, and professionals across every college, school, and department.
+        </p>
         <% if (activeFilterCount) { %>
           <div class="active-filter-list">
             <% if (filters.q) { %><span>Search: <%= filters.q %></span><% } %>
@@ -39,7 +42,7 @@
       <summary class="directory-filter-summary">
         <div class="directory-filter-summary-copy">
           <strong>Search and filters</strong>
-          <span>Refine the directory by name, title, college, school, or department.</span>
+          <span>Find people fast by name, title, college, school, or department.</span>
         </div>
         <span class="directory-filter-toggle" aria-hidden="true">
           <span class="directory-filter-open-label">Hide filters</span>
