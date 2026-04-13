@@ -183,6 +183,27 @@
                     </span>
                   </label>
                 </div>
+                <% (customLinkFields || []).forEach((field) => { %>
+                  <% const customLink = profile && profile.customLinks && profile.customLinks[field.id] ? profile.customLinks[field.id] : { value: "", visible: true }; %>
+                  <div class="visibility-field">
+                    <label class="field-shell">
+                      <span><%= field.id === "doi" ? field.label : `${field.label} URL` %></span>
+                      <input
+                        type="<%= field.id === 'doi' ? 'text' : 'url' %>"
+                        name="customLink_<%= field.id %>"
+                        value="<%= customLink.value || '' %>"
+                        <%= field.id === "doi" ? 'placeholder="https://doi.org/... or 10.xxxx"' : "" %>
+                      />
+                    </label>
+                    <label class="toggle-row toggle-row-compact">
+                      <span>Show on public profile</span>
+                      <span class="toggle-switch">
+                        <input type="checkbox" name="showCustomLink_<%= field.id %>" <%= customLink.visible ? "checked" : "" %> />
+                        <span class="toggle-slider"></span>
+                      </span>
+                    </label>
+                  </div>
+                <% }) %>
                 <div class="visibility-field">
                   <label class="field-shell">
                     <span>ORCID URL</span>

@@ -4,11 +4,13 @@ const {
   updateProfile,
   updateUser,
   updateUserPassword,
+  listCustomLinkFields,
   findProfileByUserId,
   listProfileOptions,
   listStaffCategories
 } = require("../lib/store");
 const {
+  normalizeAcademicLink,
   normalizeOptional,
   splitLines,
   summarizeProfileCompleteness,
@@ -19,6 +21,19 @@ const router = express.Router();
 
 function buildSelectOptions(baseOptions, currentValue) {
   return [...new Set([...(baseOptions || []), String(currentValue || "").trim()].filter(Boolean))];
+}
+
+function buildCustomLinks(body, customLinkFields) {
+  return customLinkFields.reduce((result, field) => {
+    const rawValue = normalizeOptional(body[`customLink_${field.id}`]);
+
+    result[field.id] = {
+      value: normalizeAcademicLink(rawValue, { isDoi: field.id === "doi" }),
+      visible: truthyCheckbox(body[`showCustomLink_${field.id}`])
+    };
+
+    return result;
+  }, {});
 }
 
 function recordActivity(entry) {
@@ -41,6 +56,7 @@ router.get("/", (req, res) => {
     title: "My Staff Profile",
     pageClass: "page-staff",
     profile,
+    customLinkFields: listCustomLinkFields(),
     profileSummary: summarizeProfileCompleteness(profile),
     publicUrl: `${req.protocol}://${req.get("host")}/prs/${profile.slug}`,
     formOptions: {
@@ -65,6 +81,7 @@ router.post("/", async (req, res) => {
   try {
     const fullName = normalizeOptional(req.body.fullName);
     const emailAddress = normalizeOptional(req.body.emailAddress);
+    const customLinkFields = listCustomLinkFields();
 
     const updatedUser = updateUser(profile.userId, {
       name: fullName || profile.fullName,
@@ -92,6 +109,7 @@ router.post("/", async (req, res) => {
       linkedinUrl: normalizeOptional(req.body.linkedinUrl),
       emailAddress,
       cvUrl: normalizeOptional(req.body.cvUrl),
+      customLinks: buildCustomLinks(req.body, customLinkFields),
       showEmailAddress: truthyCheckbox(req.body.showEmailAddress),
       showPhone: truthyCheckbox(req.body.showPhone),
       showOfficeAddress: truthyCheckbox(req.body.showOfficeAddress),

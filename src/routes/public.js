@@ -1,6 +1,7 @@
 const express = require("express");
 const {
   listAcademicHierarchy,
+  listCustomLinkFields,
   findPublishedProfileBySlug,
   listProfileOptions,
   listStaffCategories,
@@ -76,6 +77,7 @@ router.get("/prs/staff", (req, res) => {
   ]);
 
   const filters = {
+    q: String(req.query.q || "").trim(),
     staffCategory: String(req.query.staffCategory || "").trim(),
     college: String(req.query.college || "").trim(),
     schoolFaculty: String(req.query.schoolFaculty || "").trim(),
@@ -156,6 +158,25 @@ router.get("/prs/staff", (req, res) => {
   };
 
   const filteredProfiles = staffProfiles.filter((profile) => {
+    const searchText = [
+      profile.fullName,
+      profile.emailAddress,
+      profile.email,
+      profile.title,
+      profile.staffCategory,
+      profile.college,
+      profile.schoolFaculty,
+      profile.department,
+      ...(profile.researchAreas || []),
+      ...(profile.qualifications || [])
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    if (filters.q && !searchText.includes(filters.q.toLowerCase())) {
+      return false;
+    }
+
     if (filters.staffCategory && profile.staffCategory !== filters.staffCategory) {
       return false;
     }
@@ -193,6 +214,7 @@ router.get("/prs/staff", (req, res) => {
 
   function buildQuery(overrides = {}) {
     const next = {
+      q: filters.q,
       staffCategory: filters.staffCategory,
       college: filters.college,
       schoolFaculty: filters.schoolFaculty,
@@ -244,7 +266,8 @@ router.get("/prs/:slug", (req, res) => {
   return res.render("public/profile", {
     title: profile.fullName,
     pageClass: "page-profile",
-    profile
+    profile,
+    customLinkFields: listCustomLinkFields()
   });
 });
 

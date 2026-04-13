@@ -1,15 +1,18 @@
 const express = require("express");
 const multer = require("multer");
 const {
+  addCustomLinkField,
   addProfileOption,
   appendActivityLog,
   createStaffAccount,
   deleteStaffAccount,
   findProfileById,
   listActivityLogs,
+  listCustomLinkFields,
   listProfileOptions,
   listStaffCategories,
   listStaffProfiles,
+  removeCustomLinkField,
   removeProfileOption,
   toggleProfilePublish,
   toggleProfileStatus,
@@ -20,6 +23,7 @@ const {
 const {
   assertInstitutionalEmail,
   buildStaffCsvTemplate,
+  normalizeAcademicLink,
   normalizeEmail,
   normalizeOptional,
   parseCsv,
@@ -40,6 +44,19 @@ const csvUpload = multer({
 
 function buildSelectOptions(baseOptions, currentValue) {
   return [...new Set([...(baseOptions || []), String(currentValue || "").trim()].filter(Boolean))];
+}
+
+function buildCustomLinks(body, customLinkFields) {
+  return customLinkFields.reduce((result, field) => {
+    const rawValue = normalizeOptional(body[`customLink_${field.id}`]);
+
+    result[field.id] = {
+      value: normalizeAcademicLink(rawValue, { isDoi: field.id === "doi" }),
+      visible: truthyCheckbox(body[`showCustomLink_${field.id}`])
+    };
+
+    return result;
+  }, {});
 }
 
 function sortValues(values) {
@@ -308,12 +325,14 @@ router.get("/options/manage", (req, res) => {
     title: "Manage Directory Structure",
     pageClass: "page-admin",
     profileOptions,
+    customLinkFields: listCustomLinkFields(),
     optionCounts: {
       colleges: (profileOptions.colleges || []).length,
       schools: (profileOptions.schools || []).length,
       departments: (profileOptions.departments || []).length,
       honoraryTitles: (profileOptions.honoraryTitles || []).length,
-      titles: (profileOptions.titles || []).length
+      titles: (profileOptions.titles || []).length,
+      customLinkFields: listCustomLinkFields().length
     }
   });
 });
@@ -324,6 +343,7 @@ router.get("/staff/new", (req, res) => {
     pageClass: "page-admin",
     mode: "create",
     profile: null,
+    customLinkFields: listCustomLinkFields(),
     formOptions: {
       ...listProfileOptions(),
       staffCategories: listStaffCategories()
@@ -463,6 +483,7 @@ router.get("/staff/:id/edit", (req, res) => {
     pageClass: "page-admin",
     mode: "edit",
     profile,
+    customLinkFields: listCustomLinkFields(),
     formOptions: {
       honoraryTitles: buildSelectOptions(listProfileOptions().honoraryTitles, profile.honoraryTitle),
       staffCategories: buildSelectOptions(listStaffCategories(), profile.staffCategory),
@@ -508,6 +529,40 @@ router.post("/options/remove", (req, res) => {
   return res.redirect(resolveAdminRedirect(req, "/admin/options/manage"));
 });
 
+router.post("/options/custom-links", (req, res) => {
+  try {
+    addCustomLinkField(req.body.label);
+    recordActivity({
+      actorRole: "admin",
+      tone: "success",
+      title: "Added academic link field",
+      detail: normalizeOptional(req.body.label)
+    });
+    req.session.flash = { type: "success", message: "Academic link field added." };
+  } catch (error) {
+    req.session.flash = { type: "error", message: error.message };
+  }
+
+  return res.redirect(resolveAdminRedirect(req, "/admin/options/manage"));
+});
+
+router.post("/options/custom-links/remove", (req, res) => {
+  try {
+    removeCustomLinkField(req.body.fieldId);
+    recordActivity({
+      actorRole: "admin",
+      tone: "warning",
+      title: "Removed academic link field",
+      detail: normalizeOptional(req.body.label || req.body.fieldId)
+    });
+    req.session.flash = { type: "success", message: "Academic link field removed." };
+  } catch (error) {
+    req.session.flash = { type: "error", message: error.message };
+  }
+
+  return res.redirect(resolveAdminRedirect(req, "/admin/options/manage"));
+});
+
 router.post("/staff/:id", async (req, res) => {
   const profile = findProfileById(req.params.id);
 
@@ -519,6 +574,7 @@ router.post("/staff/:id", async (req, res) => {
   try {
     const fullName = normalizeOptional(req.body.fullName);
     const email = assertInstitutionalEmail(req.body.email);
+    const customLinkFields = listCustomLinkFields();
 
     updateUser(profile.userId, {
       name: fullName,
@@ -547,6 +603,7 @@ router.post("/staff/:id", async (req, res) => {
       openScienceUrl: normalizeOptional(req.body.openScienceUrl),
       linkedinUrl: normalizeOptional(req.body.linkedinUrl),
       cvUrl: normalizeOptional(req.body.cvUrl),
+      customLinks: buildCustomLinks(req.body, customLinkFields),
       showEmailAddress: truthyCheckbox(req.body.showEmailAddress),
       showPhone: truthyCheckbox(req.body.showPhone),
       showOfficeAddress: truthyCheckbox(req.body.showOfficeAddress),

@@ -46,6 +46,29 @@ function normalizeOptional(value) {
   return trimmed ? trimmed : "";
 }
 
+function normalizeAcademicLink(value, options = {}) {
+  const normalized = normalizeOptional(value);
+
+  if (!normalized) {
+    return "";
+  }
+
+  if (!options.isDoi) {
+    return normalized;
+  }
+
+  if (/^https?:\/\//i.test(normalized)) {
+    return normalized;
+  }
+
+  const doiValue = normalized
+    .replace(/^doi:\s*/i, "")
+    .replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, "")
+    .trim();
+
+  return doiValue ? `https://doi.org/${doiValue}` : "";
+}
+
 function splitLines(value) {
   return String(value || "")
     .split(/\r?\n/)
@@ -104,6 +127,7 @@ function summarizeProfileCompleteness(profile) {
           value.researchGateUrl ||
           value.openScienceUrl ||
           value.linkedinUrl ||
+          Object.values(value.customLinks || {}).some((item) => String(item && item.value ? item.value : "").trim()) ||
           value.cvUrl ||
           ""
       ).trim()
@@ -209,6 +233,7 @@ module.exports = {
   createId,
   displayName,
   normalizeEmail,
+  normalizeAcademicLink,
   normalizeOptional,
   parseCsv,
   sanitizeFilename,

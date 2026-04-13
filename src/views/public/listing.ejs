@@ -9,6 +9,7 @@
         <h1>BOUESTI staff directory.</h1>
         <% if (activeFilterCount) { %>
           <div class="active-filter-list">
+            <% if (filters.q) { %><span>Search: <%= filters.q %></span><% } %>
             <% if (filters.staffCategory) { %><span><%= filters.staffCategory %></span><% } %>
             <% if (filters.college) { %><span><%= filters.college %></span><% } %>
             <% if (filters.schoolFaculty) { %><span><%= filters.schoolFaculty %></span><% } %>
@@ -34,61 +35,79 @@
       </div>
     </section>
 
-    <form action="/prs/staff" method="get" class="staff-filter-bar">
-      <label>
-        <span>Staff type</span>
-        <select name="staffCategory">
-          <option value="">All staff</option>
-          <% filterOptions.staffCategories.forEach((item) => { %>
-            <option value="<%= item %>" <%= filters.staffCategory === item ? "selected" : "" %>><%= item %></option>
-          <% }) %>
-        </select>
-      </label>
+    <details class="directory-filter-panel" open>
+      <summary class="directory-filter-summary">
+        <div class="directory-filter-summary-copy">
+          <strong>Search and filters</strong>
+          <span>Refine the directory by name, title, college, school, or department.</span>
+        </div>
+        <span class="directory-filter-toggle" aria-hidden="true">
+          <span class="directory-filter-open-label">Hide filters</span>
+          <span class="directory-filter-closed-label">Show filters</span>
+        </span>
+      </summary>
 
-      <label>
-        <span>College</span>
-        <select name="college" id="collegeFilter">
-          <option value="">All colleges</option>
-          <% filterOptions.colleges.forEach((item) => { %>
-            <option value="<%= item %>" <%= filters.college === item ? "selected" : "" %>><%= item %></option>
-          <% }) %>
-        </select>
-      </label>
+      <form action="/prs/staff" method="get" class="staff-filter-bar directory-filter-form">
+        <label class="directory-search-field">
+          <span>Search</span>
+          <input type="search" name="q" value="<%= filters.q %>" placeholder="Name, title, school, department" />
+        </label>
 
-      <label>
-        <span>School</span>
-        <select name="schoolFaculty" id="schoolFilter">
-          <option value="">All schools</option>
-          <% filterOptions.schools.forEach((item) => { %>
-            <option value="<%= item %>" <%= filters.schoolFaculty === item ? "selected" : "" %>><%= item %></option>
-          <% }) %>
-        </select>
-      </label>
+        <label>
+          <span>Staff type</span>
+          <select name="staffCategory">
+            <option value="">All staff</option>
+            <% filterOptions.staffCategories.forEach((item) => { %>
+              <option value="<%= item %>" <%= filters.staffCategory === item ? "selected" : "" %>><%= item %></option>
+            <% }) %>
+          </select>
+        </label>
 
-      <label>
-        <span>Department</span>
-        <select name="department" id="departmentFilter">
-          <option value="">All departments</option>
-          <% filterOptions.departments.forEach((item) => { %>
-            <option value="<%= item %>" <%= filters.department === item ? "selected" : "" %>><%= item %></option>
-          <% }) %>
-        </select>
-      </label>
+        <label>
+          <span>College</span>
+          <select name="college" id="collegeFilter">
+            <option value="">All colleges</option>
+            <% filterOptions.colleges.forEach((item) => { %>
+              <option value="<%= item %>" <%= filters.college === item ? "selected" : "" %>><%= item %></option>
+            <% }) %>
+          </select>
+        </label>
 
-      <label>
-        <span>Show</span>
-        <select name="perPage">
-          <% allowedPerPage.forEach((size) => { %>
-            <option value="<%= size %>" <%= perPage === size ? "selected" : "" %>><%= size %> per page</option>
-          <% }) %>
-        </select>
-      </label>
+        <label>
+          <span>School</span>
+          <select name="schoolFaculty" id="schoolFilter">
+            <option value="">All schools</option>
+            <% filterOptions.schools.forEach((item) => { %>
+              <option value="<%= item %>" <%= filters.schoolFaculty === item ? "selected" : "" %>><%= item %></option>
+            <% }) %>
+          </select>
+        </label>
 
-      <div class="filter-actions">
-        <button type="submit" class="button button-primary">Apply</button>
-        <a href="/prs/staff" class="button button-ghost">Reset</a>
-      </div>
-    </form>
+        <label>
+          <span>Department</span>
+          <select name="department" id="departmentFilter">
+            <option value="">All departments</option>
+            <% filterOptions.departments.forEach((item) => { %>
+              <option value="<%= item %>" <%= filters.department === item ? "selected" : "" %>><%= item %></option>
+            <% }) %>
+          </select>
+        </label>
+
+        <label>
+          <span>Show</span>
+          <select name="perPage">
+            <% allowedPerPage.forEach((size) => { %>
+              <option value="<%= size %>" <%= perPage === size ? "selected" : "" %>><%= size %> per page</option>
+            <% }) %>
+          </select>
+        </label>
+
+        <div class="filter-actions">
+          <button type="submit" class="button button-primary">Apply</button>
+          <a href="/prs/staff" class="button button-ghost">Reset</a>
+        </div>
+      </form>
+    </details>
 
     <% if (!staffProfiles.length) { %>
       <div class="empty-state">

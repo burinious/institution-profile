@@ -84,6 +84,34 @@
           </section>
         <% }) %>
       </div>
+
+      <section class="option-card option-card-wide">
+        <div class="option-card-head">
+          <h3>Academic Link Fields</h3>
+          <p class="card-copy">Add reusable public profile link fields such as DOI, personal website, Lab page, or YouTube channel.</p>
+        </div>
+        <div class="option-chip-list">
+          <% customLinkFields.forEach((field) => { %>
+            <form action="/admin/options/custom-links/remove" method="post" class="option-chip-form">
+              <input type="hidden" name="fieldId" value="<%= field.id %>" />
+              <input type="hidden" name="label" value="<%= field.label %>" />
+              <input type="hidden" name="redirectTo" value="/admin/options/manage" />
+              <button type="submit" class="option-chip" title="<%= field.id === 'doi' ? 'DOI is required' : 'Remove field' %>" <%= field.id === "doi" ? "disabled" : "" %>>
+                <span><%= field.label %></span>
+                <strong><%= field.id === "doi" ? "•" : "×" %></strong>
+              </button>
+            </form>
+          <% }) %>
+        </div>
+        <form action="/admin/options/custom-links" method="post" class="stack-form option-add-form option-add-form-inline">
+          <input type="hidden" name="redirectTo" value="/admin/options/manage" />
+          <label>
+            <span>Add field label</span>
+            <input type="text" name="label" placeholder="Personal Website" required />
+          </label>
+          <button type="submit" class="button button-ghost">Add Field</button>
+        </form>
+      </section>
     </section>
   </div>
 </main>

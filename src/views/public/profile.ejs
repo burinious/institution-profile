@@ -3,12 +3,29 @@
 
 <%
   const publicEmail = profile.emailAddress || profile.email;
+  const customAcademicLinks = (customLinkFields || [])
+    .map((field) => {
+      const entry = profile.customLinks && profile.customLinks[field.id];
+
+      if (!entry || !entry.visible || !entry.value) {
+        return null;
+      }
+
+      return {
+        label: field.label,
+        href: entry.value,
+        visible: true,
+        linkText: field.id === "doi" ? "Open DOI" : "Open link"
+      };
+    })
+    .filter(Boolean);
   const academicLinks = [
     { label: "Google Scholar Link", href: profile.googleScholarUrl, visible: profile.showGoogleScholarUrl },
     { label: "ResearchGate Link", href: profile.researchGateUrl, visible: profile.showResearchGateUrl },
     { label: "Open Science", href: profile.openScienceUrl, visible: profile.showOpenScienceUrl },
     { label: "ORCID", href: profile.orcidUrl, visible: profile.showOrcidUrl },
     { label: "Scopus", href: profile.scopusUrl, visible: profile.showScopusUrl },
+    ...customAcademicLinks,
     { label: "LinkedIn", href: profile.linkedinUrl, visible: profile.showLinkedinUrl }
   ].filter((item) => item.visible && item.href);
   const snapshotItems = [

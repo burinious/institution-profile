@@ -65,6 +65,7 @@ const defaultProfileOptions = {
     "Social Sciences Education"
   ]
 };
+const defaultCustomLinkFields = [{ id: "doi", label: "DOI" }];
 
 const optionFieldMap = {
   honoraryTitles: "honoraryTitle",
@@ -111,6 +112,7 @@ const defaultProfileValues = {
   linkedinUrl: "",
   emailAddress: "",
   cvUrl: "",
+  customLinks: {},
   showEmailAddress: true,
   showPhone: true,
   showOfficeAddress: true,
@@ -211,6 +213,60 @@ function normalizeOptionList(values) {
   );
 }
 
+function normalizeCustomLinkFields(fields) {
+  const fieldMap = new Map();
+
+  [...defaultCustomLinkFields, ...(Array.isArray(fields) ? fields : [])].forEach((field) => {
+    const label = String(field && field.label ? field.label : "").trim();
+    const id = slugify(field && field.id ? field.id : label);
+
+    if (!label || !id || fieldMap.has(id)) {
+      return;
+    }
+
+    fieldMap.set(id, { id, label });
+  });
+
+  return [...fieldMap.values()].sort((left, right) => left.label.localeCompare(right.label));
+}
+
+function normalizeCustomLinks(profile = {}, fields = []) {
+  const input =
+    profile && typeof profile.customLinks === "object" && profile.customLinks
+      ? profile.customLinks
+      : {};
+  const normalized = {};
+
+  Object.entries(input).forEach(([rawId, entry]) => {
+    const id = slugify(rawId);
+
+    if (!id) {
+      return;
+    }
+
+    normalized[id] = {
+      value:
+        typeof entry === "string"
+          ? String(entry).trim()
+          : String(entry && entry.value ? entry.value : "").trim(),
+      visible:
+        typeof entry === "string"
+          ? true
+          : Object.prototype.hasOwnProperty.call(entry || {}, "visible")
+            ? truthyCheckbox(entry.visible)
+            : true
+    };
+  });
+
+  fields.forEach((field) => {
+    if (!normalized[field.id]) {
+      normalized[field.id] = { value: "", visible: true };
+    }
+  });
+
+  return normalized;
+}
+
 function ensureFile() {
   if (!fs.existsSync(dataPath)) {
     fs.mkdirSync(path.dirname(dataPath), { recursive: true });
@@ -221,6 +277,7 @@ function ensureFile() {
           users: [],
           staffProfiles: [],
           profileOptions: defaultProfileOptions,
+          customLinkFields: defaultCustomLinkFields,
           activityLogs: []
         },
         null,
@@ -237,6 +294,7 @@ function readState() {
   const parsed = JSON.parse(raw);
 
   parsed.users = Array.isArray(parsed.users) ? parsed.users : [];
+  parsed.customLinkFields = normalizeCustomLinkFields(parsed.customLinkFields);
   parsed.staffProfiles = Array.isArray(parsed.staffProfiles)
     ? parsed.staffProfiles.map((profile) => ({
         ...defaultProfileValues,
@@ -246,6 +304,7 @@ function readState() {
           inferStaffCategory(profile)
         ),
         ...normalizePublicVisibility(profile),
+        customLinks: normalizeCustomLinks(profile, parsed.customLinkFields),
         researchAreas: Array.isArray(profile.researchAreas) ? profile.researchAreas : [],
         qualifications: Array.isArray(profile.qualifications) ? profile.qualifications : []
       }))
@@ -318,6 +377,11 @@ function listStaffCategories() {
 
 function listAcademicHierarchy() {
   return academicHierarchy;
+}
+
+function listCustomLinkFields() {
+  const state = readState();
+  return state.customLinkFields;
 }
 
 function appendActivityLog(entry) {
@@ -457,6 +521,7 @@ async function createStaffAccount(input) {
     schoolFaculty: String(input.schoolFaculty || "").trim(),
     email,
     emailAddress: email,
+    customLinks: normalizeCustomLinks({}, state.customLinkFields),
     slug: uniqueSlug(fullName, profileId),
     createdAt: now,
     updatedAt: now
@@ -613,7 +678,61 @@ function removeProfileOption(field, value) {
   return state.profileOptions;
 }
 
+function addCustomLinkField(label) {
+  const state = readState();
+  const trimmedLabel = String(label || "").trim();
+
+  if (!trimmedLabel) {
+    throw new Error("Field label is required.");
+  }
+
+  const id = slugify(trimmedLabel);
+
+  if (!id) {
+    throw new Error("Field label must include letters or numbers.");
+  }
+
+  if (state.customLinkFields.some((field) => field.id === id)) {
+    throw new Error("A custom academic link field with that label already exists.");
+  }
+
+  state.customLinkFields = normalizeCustomLinkFields([
+    ...state.customLinkFields,
+    { id, label: trimmedLabel }
+  ]);
+  state.staffProfiles = state.staffProfiles.map((profile) => ({
+    ...profile,
+    customLinks: normalizeCustomLinks(profile, state.customLinkFields)
+  }));
+  writeState(state);
+
+  return state.customLinkFields;
+}
+
+function removeCustomLinkField(fieldId) {
+  const state = readState();
+  const normalizedId = slugify(fieldId);
+
+  if (!normalizedId) {
+    throw new Error("Field id is required.");
+  }
+
+  if (normalizedId === "doi") {
+    throw new Error("The DOI field is required and cannot be removed.");
+  }
+
+  if (!state.customLinkFields.some((field) => field.id === normalizedId)) {
+    throw new Error("Custom academic link field not found.");
+  }
+
+  state.customLinkFields = state.customLinkFields.filter((field) => field.id !== normalizedId);
+  writeState(state);
+
+  return state.customLinkFields;
+}
+
 module.exports = {
+  addCustomLinkField,
   addProfileOption,
   appendActivityLog,
   createStaffAccount,
@@ -625,10 +744,12 @@ module.exports = {
   findUserById,
   listAcademicHierarchy,
   listActivityLogs,
+  listCustomLinkFields,
   listProfileOptions,
   listPublishedProfiles,
   listStaffCategories,
   listStaffProfiles,
+  removeCustomLinkField,
   removeProfileOption,
   seedAdmin,
   toggleProfilePublish,
