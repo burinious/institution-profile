@@ -1,0 +1,134 @@
+<%- include("../partials/head", { title, pageClass, siteName }) %>
+<%- include("../partials/header", { currentUser, flash }) %>
+
+<main class="dashboard-shell">
+  <div class="container">
+    <section class="dashboard-hero-card">
+      <div class="dashboard-heading dashboard-heading-tight">
+        <div>
+          <span class="eyebrow">Admin Control Room</span>
+          <h1>Choose what you want to manage.</h1>
+          <p class="hero-copy">
+            Keep the admin home short. Use dedicated pages for staff records and directory structure.
+          </p>
+        </div>
+        <div class="dashboard-action-stack">
+          <a href="/admin/staff/new" class="button button-primary">Create Staff Account</a>
+          <a href="/admin/staff/manage" class="button button-ghost">Manage Staff</a>
+          <a href="/admin/options/manage" class="button button-ghost">Manage Structure</a>
+        </div>
+      </div>
+
+      <div class="dashboard-stat-grid">
+        <article class="metric-card accent">
+          <strong><%= adminSummary.totalProfiles %></strong>
+          <span>Total staff records</span>
+        </article>
+        <article class="metric-card">
+          <strong><%= adminSummary.publishedProfiles %></strong>
+          <span>Published profiles</span>
+        </article>
+        <article class="metric-card">
+          <strong><%= adminSummary.activeProfiles %></strong>
+          <span>Active accounts</span>
+        </article>
+        <article class="metric-card">
+          <strong><%= adminSummary.passwordResetCount %></strong>
+          <span>Must change password</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="dashboard-panel-grid admin-panel-grid admin-shortcuts-grid">
+      <div class="dashboard-sidebar-stack admin-shortcut-stack">
+        <article class="form-card stack-form dashboard-action-card">
+          <span class="eyebrow">Manage Staff</span>
+          <h2>Accounts, reset, delete</h2>
+          <p class="card-copy">Filter staff records, publish or hide profiles, reset passwords, and remove profiles from one page.</p>
+          <div class="dashboard-action-stack">
+            <a href="/admin/staff/manage" class="button button-primary">Open Staff Manager</a>
+          </div>
+        </article>
+
+        <article class="form-card stack-form dashboard-action-card">
+          <span class="eyebrow">Directory Structure</span>
+          <h2>Colleges, schools, departments</h2>
+          <p class="card-copy">Maintain the shared dropdown values used across staff editing and public directory filters.</p>
+          <div class="dashboard-action-stack">
+            <a href="/admin/options/manage" class="button button-primary">Open Structure Manager</a>
+          </div>
+        </article>
+      </div>
+
+      <article class="form-card stack-form activity-log-card">
+        <div class="dashboard-section-head activity-log-head">
+          <div>
+            <span class="eyebrow">Recent Activity</span>
+            <h2>Latest directory moves</h2>
+          </div>
+          <span class="activity-log-count"><%= recentActivity.length %> shown</span>
+        </div>
+
+        <% if (recentActivity.length) { %>
+          <div class="activity-log-list">
+            <% recentActivity.forEach((entry) => { %>
+              <article class="activity-log-item" data-tone="<%= entry.tone %>">
+                <div class="activity-log-meta">
+                  <span class="activity-role-pill"><%= entry.actorLabel %></span>
+                  <span class="activity-time"><%= entry.timeLabel %></span>
+                </div>
+                <h3><%= entry.title %></h3>
+                <% if (entry.detail) { %>
+                  <p><%= entry.detail %></p>
+                <% } %>
+              </article>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <div class="activity-log-empty">
+            <span class="eyebrow">Quiet Feed</span>
+            <h3>No recent activity yet.</h3>
+            <p class="card-copy">New admin actions and staff profile updates will appear here automatically.</p>
+          </div>
+        <% } %>
+      </article>
+    </section>
+
+    <section class="dashboard-panel-grid admin-panel-grid admin-shortcuts-grid">
+      <article class="form-card stack-form dashboard-action-card">
+        <span class="eyebrow">Create Accounts</span>
+        <h2>Single and bulk entry</h2>
+        <p class="card-copy">Create one staff account manually or use the CSV upload flow from the new staff page.</p>
+        <div class="dashboard-action-stack">
+          <a href="/admin/staff/new" class="button button-primary">Open Staff Form</a>
+          <a href="/admin/staff/template.csv" class="button button-ghost">Download CSV Template</a>
+        </div>
+      </article>
+
+      <article class="form-card stack-form dashboard-action-card">
+        <span class="eyebrow">Current Structure</span>
+        <h2>Directory option totals</h2>
+        <div class="metric-grid">
+          <article class="metric-card">
+            <strong><%= profileOptionCounts.colleges %></strong>
+            <span>Colleges</span>
+          </article>
+          <article class="metric-card">
+            <strong><%= profileOptionCounts.schools %></strong>
+            <span>Schools</span>
+          </article>
+          <article class="metric-card">
+            <strong><%= profileOptionCounts.departments %></strong>
+            <span>Departments</span>
+          </article>
+          <article class="metric-card">
+            <strong><%= profileOptionCounts.titles %></strong>
+            <span>Titles</span>
+          </article>
+        </div>
+      </article>
+    </section>
+  </div>
+</main>
+
+<%- include("../partials/footer") %>

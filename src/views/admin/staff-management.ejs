@@ -1,0 +1,310 @@
+<%- include("../partials/head", { title, pageClass, siteName }) %>
+<%- include("../partials/header", { currentUser, flash }) %>
+
+<main class="dashboard-shell">
+  <div class="container">
+    <section class="dashboard-hero-card">
+      <div class="dashboard-heading dashboard-heading-tight">
+        <div>
+          <span class="eyebrow">Manage Staff</span>
+          <h1>Filter records and take action fast.</h1>
+          <p class="hero-copy">
+            Reset passwords, publish profiles, update account status, or delete staff records without scrolling through the full admin dashboard.
+          </p>
+        </div>
+        <div class="dashboard-action-stack">
+          <a href="/admin/staff/new" class="button button-primary">Create Staff Account</a>
+          <a href="/admin" class="button button-ghost">Back to Admin</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="table-card directory-table-card" id="staff-records">
+      <div class="dashboard-section-head table-head">
+        <div>
+          <span class="eyebrow">Staff Records</span>
+          <h2>Manage staff records</h2>
+        </div>
+        <p class="card-copy"><%= totalResults %> result(s) found. <%= adminSummary.pendingProfiles %> profile(s) are still in draft mode.</p>
+      </div>
+      <form action="/admin/staff/manage" method="get" class="staff-filter-bar admin-filter-bar">
+        <label>
+          <span>Search</span>
+          <input type="text" name="q" value="<%= filters.q %>" placeholder="Name, email, title" />
+        </label>
+        <label>
+          <span>College</span>
+          <select name="college">
+            <option value="">All colleges</option>
+            <% filterOptions.colleges.forEach((item) => { %>
+              <option value="<%= item %>" <%= filters.college === item ? "selected" : "" %>><%= item %></option>
+            <% }) %>
+          </select>
+        </label>
+        <label>
+          <span>School</span>
+          <select name="schoolFaculty">
+            <option value="">All schools</option>
+            <% filterOptions.schools.forEach((item) => { %>
+              <option value="<%= item %>" <%= filters.schoolFaculty === item ? "selected" : "" %>><%= item %></option>
+            <% }) %>
+          </select>
+        </label>
+        <label>
+          <span>Department</span>
+          <select name="department">
+            <option value="">All departments</option>
+            <% filterOptions.departments.forEach((item) => { %>
+              <option value="<%= item %>" <%= filters.department === item ? "selected" : "" %>><%= item %></option>
+            <% }) %>
+          </select>
+        </label>
+        <label>
+          <span>Status</span>
+          <select name="accountStatus">
+            <option value="">All accounts</option>
+            <option value="active" <%= filters.accountStatus === "active" ? "selected" : "" %>>Active</option>
+            <option value="inactive" <%= filters.accountStatus === "inactive" ? "selected" : "" %>>Inactive</option>
+          </select>
+        </label>
+        <label>
+          <span>Visibility</span>
+          <select name="visibility">
+            <option value="">All records</option>
+            <option value="published" <%= filters.visibility === "published" ? "selected" : "" %>>Published</option>
+            <option value="draft" <%= filters.visibility === "draft" ? "selected" : "" %>>Draft</option>
+          </select>
+        </label>
+        <label>
+          <span>Per page</span>
+          <select name="perPage">
+            <% allowedPerPage.forEach((value) => { %>
+              <option value="<%= value %>" <%= perPage === value ? "selected" : "" %>><%= value %></option>
+            <% }) %>
+          </select>
+        </label>
+        <div class="filter-actions">
+          <button type="submit" class="button button-primary button-small">Filter</button>
+          <a href="/admin/staff/manage#staff-records" class="button button-ghost button-small">Clear</a>
+        </div>
+      </form>
+      <p class="muted-text admin-table-note"><code>Reset</code> sets the password back to <code>password1@bouesti</code> and requires the staff member to change it after signing in.</p>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Placement</th>
+              <th>Status</th>
+              <th>Visibility</th>
+              <th>URL</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (!profiles.length) { %>
+              <tr>
+                <td colspan="7" class="table-empty">No staff accounts matched the current filters.</td>
+              </tr>
+            <% } %>
+            <% profiles.forEach((profile) => { %>
+              <tr data-profile-id="<%= profile.id %>">
+                <td>
+                  <strong><%= profile.fullName %></strong>
+                  <small><%= profile.title || profile.department || "Academic Staff" %></small>
+                </td>
+                <td>
+                  <span class="js-row-email"><%= profile.owner ? profile.owner.email : profile.email %></span>
+                  <small class="password-pending-note" <%= profile.owner && profile.owner.mustChangePassword ? "" : "hidden" %>>Password reset pending</small>
+                </td>
+                <td>
+                  <%= profile.college || "No college" %>
+                  <small><%= profile.schoolFaculty || profile.department || "No school or department" %></small>
+                </td>
+                <td>
+                  <span class="status-chip js-status-chip <%= profile.accountStatus === 'active' ? 'status-active' : 'status-inactive' %>">
+                    <%= profile.accountStatus %>
+                  </span>
+                </td>
+                <td>
+                  <span class="status-chip js-visibility-chip <%= profile.isPublished ? 'status-published' : 'status-draft' %>">
+                    <%= profile.isPublished ? "Published" : "Draft" %>
+                  </span>
+                </td>
+                <td><code>/prs/<%= profile.slug %></code></td>
+                <td>
+                  <div class="table-actions">
+                    <a href="/admin/staff/<%= profile.id %>/edit" class="button button-ghost button-small">Edit</a>
+                    <form method="post" action="/admin/staff/<%= profile.id %>/reset-password" class="js-admin-action-form" data-action="reset">
+                      <input type="hidden" name="redirectTo" value="<%= buildQuery() %>#staff-records" />
+                      <button type="submit" class="button button-ghost button-small">Reset</button>
+                    </form>
+                    <form method="post" action="/admin/staff/<%= profile.id %>/toggle-publish" class="js-admin-action-form" data-action="toggle-publish">
+                      <input type="hidden" name="redirectTo" value="<%= buildQuery() %>#staff-records" />
+                      <button type="submit" class="button button-ghost button-small js-publish-button">
+                        <%= profile.isPublished ? "Hide" : "Publish" %>
+                      </button>
+                    </form>
+                    <form method="post" action="/admin/staff/<%= profile.id %>/toggle-status" class="js-admin-action-form" data-action="toggle-status">
+                      <input type="hidden" name="redirectTo" value="<%= buildQuery() %>#staff-records" />
+                      <button type="submit" class="button button-ghost button-small js-status-button">
+                        <%= profile.accountStatus === "active" ? "Deactivate" : "Activate" %>
+                      </button>
+                    </form>
+                    <form method="post" action="/admin/staff/<%= profile.id %>/delete" class="js-admin-action-form" data-action="delete">
+                      <input type="hidden" name="redirectTo" value="<%= buildQuery() %>#staff-records" />
+                      <button type="submit" class="button button-danger button-small">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% if (totalPages > 1) { %>
+        <div class="pagination-bar">
+          <p class="pagination-summary">Page <%= currentPage %> of <%= totalPages %></p>
+          <div class="pagination-links">
+            <% pageNumbers.forEach((pageNumber) => { %>
+              <a
+                href="<%= buildQuery({ page: pageNumber }) %>#staff-records"
+                class="button <%= pageNumber === currentPage ? 'button-primary' : 'button-ghost' %> button-small"
+              >
+                <%= pageNumber %>
+              </a>
+            <% }) %>
+          </div>
+        </div>
+      <% } %>
+    </section>
+  </div>
+</main>
+
+<script>
+  (() => {
+    const sectionSelector = "#staff-records";
+
+    const buildSectionUrl = (url) => {
+      const nextUrl = new URL(url, window.location.origin);
+      nextUrl.hash = "staff-records";
+      return nextUrl.toString();
+    };
+
+    const refreshSection = async (url, pushState = true) => {
+      const response = await fetch(url, {
+        headers: {
+          "X-Requested-With": "fetch"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to refresh page section.");
+      }
+
+      const html = await response.text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const nextSection = doc.querySelector(sectionSelector);
+      const currentSection = document.querySelector(sectionSelector);
+
+      if (!nextSection || !currentSection) {
+        throw new Error("Staff records section could not be refreshed.");
+      }
+
+      currentSection.replaceWith(nextSection);
+
+      if (pushState) {
+        window.history.pushState({}, "", buildSectionUrl(url));
+      }
+    };
+
+    document.addEventListener("submit", async (event) => {
+      const form = event.target;
+
+      if (form.matches(".admin-filter-bar")) {
+        event.preventDefault();
+
+        const params = new URLSearchParams(new FormData(form));
+        const url = `${form.action}?${params.toString()}`;
+
+        try {
+          await refreshSection(url);
+        } catch (error) {
+          window.showToast("Filter update failed. Try again.", "error");
+        }
+
+        return;
+      }
+
+      if (!form.matches(".js-admin-action-form")) {
+        return;
+      }
+
+      event.preventDefault();
+
+      const action = form.dataset.action || "";
+      const submitButton = form.querySelector("button[type='submit']");
+
+      if (action === "delete" && !window.confirm("Delete this staff profile?")) {
+        return;
+      }
+
+      if (submitButton) {
+        submitButton.disabled = true;
+      }
+
+      try {
+        const response = await fetch(form.action, {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "X-Requested-With": "fetch"
+          },
+          body: new URLSearchParams(new FormData(form))
+        });
+
+        const result = await response.json();
+        window.showToast(result.message, result.type || (result.ok ? "success" : "error"));
+
+        if (!response.ok || !result.ok) {
+          return;
+        }
+
+        await refreshSection(window.location.pathname + window.location.search, false);
+      } catch (error) {
+        window.showToast("Request failed. Try again.", "error");
+      } finally {
+        if (submitButton) {
+          submitButton.disabled = false;
+        }
+      }
+    });
+
+    document.addEventListener("click", async (event) => {
+      const link = event.target.closest(".pagination-links a, .filter-actions a");
+
+      if (!link || !link.closest(sectionSelector)) {
+        return;
+      }
+
+      event.preventDefault();
+
+      try {
+        await refreshSection(link.href);
+      } catch (error) {
+        window.showToast("Navigation failed. Try again.", "error");
+      }
+    });
+
+    window.addEventListener("popstate", async () => {
+      try {
+        await refreshSection(window.location.href, false);
+      } catch (error) {
+        // Ignore popstate refresh failures and keep the current DOM.
+      }
+    });
+  })();
+</script>
+
+<%- include("../partials/footer") %>

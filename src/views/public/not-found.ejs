@@ -1,0 +1,18 @@
+<%- include("../partials/head", { title, pageClass, siteName }) %>
+<%- include("../partials/header", { currentUser, flash }) %>
+
+<main class="centered-state">
+  <div class="container">
+    <div class="empty-state narrow">
+      <span class="eyebrow">404</span>
+      <h1>This page does not exist.</h1>
+      <p>The requested staff profile or page could not be found.</p>
+      <div class="hero-actions">
+        <a href="/prs/staff" class="button button-primary">Open directory</a>
+        <a href="/" class="button button-ghost">Go home</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include("../partials/footer") %>

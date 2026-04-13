@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="title desc">
+  <title id="title">BOUESTI Logo</title>
+  <desc id="desc">Placeholder logo for staff without a profile photo.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d5c46" />
+      <stop offset="100%" stop-color="#083628" />
+    </linearGradient>
+  </defs>
+  <rect width="240" height="240" rx="48" fill="url(#bg)" />
+  <circle cx="120" cy="88" r="34" fill="#f4efe6" opacity="0.95" />
+  <path d="M58 184c10-30 36-48 62-48s52 18 62 48" fill="#f4efe6" opacity="0.95" />
+  <rect x="52" y="178" width="136" height="16" rx="8" fill="#c96f3a" />
+  <text x="120" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#f4efe6">BOU</text>
+</svg>

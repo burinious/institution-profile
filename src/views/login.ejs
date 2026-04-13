@@ -1,0 +1,55 @@
+<%- include("partials/head", { title, pageClass, siteName }) %>
+<%- include("partials/header", { currentUser, flash }) %>
+
+<main class="auth-shell auth-shell-centered">
+  <section class="auth-panel auth-form-card auth-form-card-centered">
+    <span class="eyebrow">Login</span>
+    <h2>Staff sign in</h2>
+    <p class="card-copy">Use your staff email address and password to continue to the dashboard.</p>
+    <form class="stack-form" action="/login" method="post">
+      <label>
+        <span>Email address</span>
+        <input type="email" name="email" required />
+      </label>
+      <label>
+        <span>Password</span>
+        <div class="password-field">
+          <input id="login-password" type="password" name="password" required />
+          <button
+            type="button"
+            class="password-toggle"
+            aria-controls="login-password"
+            aria-label="Show password"
+            aria-pressed="false"
+          >
+            Show
+          </button>
+        </div>
+      </label>
+      <button type="submit" class="button button-primary button-block">Sign In</button>
+    </form>
+  </section>
+</main>
+
+<script>
+  (() => {
+    const passwordField = document.getElementById("login-password");
+    const toggleButton = document.querySelector(".password-toggle");
+
+    if (!passwordField || !toggleButton) {
+      return;
+    }
+
+    toggleButton.addEventListener("click", () => {
+      const nextType = passwordField.type === "password" ? "text" : "password";
+      const isVisible = nextType === "text";
+
+      passwordField.type = nextType;
+      toggleButton.textContent = isVisible ? "Hide" : "Show";
+      toggleButton.setAttribute("aria-pressed", String(isVisible));
+      toggleButton.setAttribute("aria-label", isVisible ? "Hide password" : "Show password");
+    });
+  })();
+</script>
+
+<%- include("partials/footer") %>

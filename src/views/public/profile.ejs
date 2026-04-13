@@ -1,0 +1,194 @@
+<%- include("../partials/head", { title, pageClass, siteName }) %>
+<%- include("../partials/header", { currentUser, flash }) %>
+
+<%
+  const publicEmail = profile.emailAddress || profile.email;
+  const academicLinks = [
+    { label: "Google Scholar Link", href: profile.googleScholarUrl, visible: profile.showGoogleScholarUrl },
+    { label: "ResearchGate Link", href: profile.researchGateUrl, visible: profile.showResearchGateUrl },
+    { label: "Open Science", href: profile.openScienceUrl, visible: profile.showOpenScienceUrl },
+    { label: "ORCID", href: profile.orcidUrl, visible: profile.showOrcidUrl },
+    { label: "Scopus", href: profile.scopusUrl, visible: profile.showScopusUrl },
+    { label: "LinkedIn", href: profile.linkedinUrl, visible: profile.showLinkedinUrl }
+  ].filter((item) => item.visible && item.href);
+  const snapshotItems = [
+    { label: "Role", value: profile.title || profile.staffCategory || "Staff" },
+    { label: "School", value: profile.schoolFaculty || "Not added yet" },
+    { label: "Department", value: profile.department || "Not added yet" },
+    profile.showEmailAddress && publicEmail ? { label: "Email", value: publicEmail } : null,
+    profile.showOfficeAddress && profile.officeAddress
+      ? { label: "Office", value: profile.officeAddress }
+      : null
+  ].filter(Boolean);
+  const contactItems = [
+    profile.showEmailAddress && publicEmail
+      ? { label: "Email Address", value: publicEmail, href: `mailto:${publicEmail}`, linkText: publicEmail }
+      : null,
+    profile.showPhone && profile.phone ? { label: "Phone", value: profile.phone } : null,
+    profile.showOfficeAddress && profile.officeAddress
+      ? { label: "Office Address", value: profile.officeAddress }
+      : null,
+    profile.showCvUrl && profile.cvUrl
+      ? { label: "Curriculum Vitae", value: "Available via academic links" }
+      : null
+  ].filter(Boolean);
+  const publicAcademicItems = [
+    ...academicLinks,
+    ...(profile.showCvUrl && profile.cvUrl
+      ? [{ label: "Curriculum Vitae", href: profile.cvUrl, linkText: "Open CV" }]
+      : []),
+    ...(profile.showEmailAddress && publicEmail
+      ? [{ label: "Email Address", href: `mailto:${publicEmail}`, linkText: publicEmail }]
+      : [])
+  ];
+%>
+
+<main class="profile-page">
+  <section class="profile-hero">
+    <div class="container profile-hero-shell">
+      <div class="profile-identity-card profile-hero-card-merged">
+        <span class="eyebrow profile-hero-badge">Staff Profile</span>
+        <div class="profile-identity-main">
+          <div class="profile-identity">
+          <% const initials = (profile.fullName || "Staff")
+            .split(/\s+/)
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((part) => part[0].toUpperCase())
+            .join(""); %>
+          <% if (profile.photoUrl) { %>
+            <img src="<%= profile.photoUrl %>" alt="<%= profile.fullName %>" class="profile-photo" />
+          <% } else { %>
+            <div class="profile-photo-fallback"><%= initials %></div>
+          <% } %>
+            <div class="profile-identity-copy">
+            <h1><%= profile.fullName %></h1>
+              <p class="profile-hero-role"><%= profile.title || profile.staffCategory || profile.honoraryTitle || "Staff" %></p>
+              <div class="profile-hero-tags">
+                <% if (profile.staffCategory) { %><span><%= profile.staffCategory %></span><% } %>
+                <% if (profile.college) { %><span><%= profile.college %></span><% } %>
+              </div>
+            </div>
+          </div>
+          <div class="profile-snapshot-shell">
+            <dl class="profile-snapshot-list">
+            <% snapshotItems.forEach((item) => { %>
+              <div>
+                <dt><%= item.label %></dt>
+                <dd><%= item.value %></dd>
+              </div>
+            <% }) %>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="profile-content">
+    <div class="container two-column-layout profile-content-grid">
+      <article class="content-card span-two narrative-card">
+        <h2>Biography</h2>
+        <p><%= profile.bio || "Biography has not been added yet." %></p>
+      </article>
+
+      <article class="content-card">
+        <h2>Appointment Details</h2>
+        <dl class="detail-list">
+          <div>
+            <dt>College</dt>
+            <dd><%= profile.college || "Not added yet" %></dd>
+          </div>
+          <div>
+            <dt>Staff Type</dt>
+            <dd><%= profile.staffCategory || "Staff" %></dd>
+          </div>
+          <div>
+            <dt>School</dt>
+            <dd><%= profile.schoolFaculty || "Not added yet" %></dd>
+          </div>
+          <div>
+            <dt>Department</dt>
+            <dd><%= profile.department || "Not added yet" %></dd>
+          </div>
+          <div>
+            <dt>Position / Title</dt>
+            <dd><%= profile.title || profile.honoraryTitle || profile.staffCategory || "Staff" %></dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="content-card">
+        <h2>Contact and Profiles</h2>
+        <% if (contactItems.length) { %>
+          <dl class="detail-list">
+            <% contactItems.forEach((item) => { %>
+              <div>
+                <dt><%= item.label %></dt>
+                <dd>
+                  <% if (item.href) { %>
+                    <a href="<%= item.href %>"><%= item.linkText %></a>
+                  <% } else { %>
+                    <%= item.value %>
+                  <% } %>
+                </dd>
+              </div>
+            <% }) %>
+          </dl>
+        <% } else { %>
+          <p class="card-copy">No public contact details are enabled for this profile.</p>
+        <% } %>
+      </article>
+
+      <article class="content-card">
+        <h2>Qualifications</h2>
+        <% if (profile.qualifications && profile.qualifications.length) { %>
+          <ul class="tag-list">
+            <% profile.qualifications.forEach((item) => { %>
+              <li><%= item %></li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <p>Qualifications have not been added yet.</p>
+        <% } %>
+      </article>
+
+      <article class="content-card">
+        <h2>Research Areas</h2>
+        <% if (profile.researchAreas && profile.researchAreas.length) { %>
+          <ul class="tag-list">
+            <% profile.researchAreas.forEach((item) => { %>
+              <li><%= item %></li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <p>Research areas have not been added yet.</p>
+        <% } %>
+      </article>
+
+      <article class="content-card span-two">
+        <h2>Academic Profile Links</h2>
+        <% if (publicAcademicItems.length) { %>
+          <dl class="detail-list">
+            <% publicAcademicItems.forEach((item) => { %>
+              <div>
+                <dt><%= item.label %></dt>
+                <dd>
+                  <% if (String(item.href).startsWith("mailto:")) { %>
+                    <a href="<%= item.href %>"><%= item.linkText || "Open profile" %></a>
+                  <% } else { %>
+                    <a href="<%= item.href %>" target="_blank" rel="noreferrer"><%= item.linkText || "Open profile" %></a>
+                  <% } %>
+                </dd>
+              </div>
+            <% }) %>
+          </dl>
+        <% } else { %>
+          <p class="card-copy">No academic links are enabled for this profile.</p>
+        <% } %>
+      </article>
+    </div>
+  </section>
+</main>
+
+<%- include("../partials/footer") %>

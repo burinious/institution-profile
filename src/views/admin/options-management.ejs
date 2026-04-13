@@ -1,0 +1,91 @@
+<%- include("../partials/head", { title, pageClass, siteName }) %>
+<%- include("../partials/header", { currentUser, flash }) %>
+
+<main class="dashboard-shell">
+  <div class="container">
+    <section class="dashboard-hero-card">
+      <div class="dashboard-heading dashboard-heading-tight">
+        <div>
+          <span class="eyebrow">Directory Structure</span>
+          <h1>Manage shared dropdown values.</h1>
+          <p class="hero-copy">
+            Keep colleges, schools, departments, titles, and honourary fields consistent across staff editing and public directory filtering.
+          </p>
+        </div>
+        <div class="dashboard-action-stack">
+          <a href="/admin" class="button button-ghost">Back to Admin</a>
+          <a href="/admin/staff/manage" class="button button-primary">Manage Staff</a>
+        </div>
+      </div>
+
+      <div class="dashboard-stat-grid">
+        <article class="metric-card accent">
+          <strong><%= optionCounts.colleges %></strong>
+          <span>Colleges</span>
+        </article>
+        <article class="metric-card">
+          <strong><%= optionCounts.schools %></strong>
+          <span>Schools</span>
+        </article>
+        <article class="metric-card">
+          <strong><%= optionCounts.departments %></strong>
+          <span>Departments</span>
+        </article>
+        <article class="metric-card">
+          <strong><%= optionCounts.titles %></strong>
+          <span>Titles</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="form-card stack-form option-manager">
+      <div class="dashboard-section-head">
+        <div>
+          <span class="eyebrow">Dropdown Manager</span>
+          <h2>Update directory structure</h2>
+        </div>
+        <p class="card-copy">Use this page for shared directory terms instead of mixing them into staff management.</p>
+      </div>
+      <div class="option-grid">
+        <% const optionGroups = [
+          { key: "honoraryTitles", label: "Honourary" },
+          { key: "titles", label: "Title" },
+          { key: "colleges", label: "College" },
+          { key: "schools", label: "School" },
+          { key: "departments", label: "Department" }
+        ]; %>
+        <% optionGroups.forEach((group) => { %>
+          <section class="option-card">
+            <div class="option-card-head">
+              <h3><%= group.label %></h3>
+            </div>
+            <div class="option-chip-list">
+              <% profileOptions[group.key].forEach((item) => { %>
+                <form action="/admin/options/remove" method="post" class="option-chip-form">
+                  <input type="hidden" name="field" value="<%= group.key %>" />
+                  <input type="hidden" name="value" value="<%= item %>" />
+                  <input type="hidden" name="redirectTo" value="/admin/options/manage" />
+                  <button type="submit" class="option-chip" title="Remove option">
+                    <span><%= item %></span>
+                    <strong>&times;</strong>
+                  </button>
+                </form>
+              <% }) %>
+            </div>
+            <form action="/admin/options" method="post" class="stack-form option-add-form">
+              <input type="hidden" name="field" value="<%= group.key %>" />
+              <input type="hidden" name="redirectTo" value="/admin/options/manage" />
+              <label>
+                <span>Add <%= group.label.toLowerCase() %></span>
+                <input type="text" name="value" required />
+              </label>
+              <button type="submit" class="button button-ghost">Add Option</button>
+            </form>
+          </section>
+        <% }) %>
+      </div>
+    </section>
+  </div>
+</main>
+
+<%- include("../partials/footer") %>

@@ -1,0 +1,19 @@
+{
+  "name": "bouesti-staff-directory",
+  "version": "1.0.0",
+  "description": "Bamidele Olumilua University staff directory with admin-managed staff profiles.",
+  "main": "src/app.js",
+  "scripts": {
+    "dev": "node --watch src/app.js",
+    "start": "node src/app.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.9.0",
+    "dotenv": "^17.4.2",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "multer": "^2.0.2"
+  }
+}

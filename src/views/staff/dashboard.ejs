@@ -1,0 +1,330 @@
+<%- include("../partials/head", { title, pageClass, siteName }) %>
+<%- include("../partials/header", { currentUser, flash }) %>
+
+<main class="dashboard-shell">
+  <div class="container">
+    <section class="dashboard-hero-card">
+      <div class="dashboard-heading dashboard-heading-tight">
+        <div>
+          <span class="eyebrow">Staff Workspace</span>
+          <h1>Manage your public academic profile.</h1>
+          <p class="hero-copy">
+            Update your identity, contact details, biography, research areas, and profile media from one editing workspace.
+          </p>
+        </div>
+        <a href="<%= publicUrl %>" target="_blank" rel="noreferrer" class="button button-ghost">View Public Page</a>
+      </div>
+
+      <div class="dashboard-stat-grid">
+        <article class="metric-card accent">
+          <strong><%= profileSummary.completionPercent %>%</strong>
+          <span>Profile completion</span>
+        </article>
+        <article class="metric-card">
+          <strong><%= profileSummary.completedItems %>/<%= profileSummary.totalItems %></strong>
+          <span>Sections completed</span>
+        </article>
+        <article class="metric-card">
+          <strong><%= profile.researchAreas ? profile.researchAreas.length : 0 %></strong>
+          <span>Research entries</span>
+        </article>
+        <article class="metric-card">
+          <strong><%= profile.qualifications ? profile.qualifications.length : 0 %></strong>
+          <span>Qualifications listed</span>
+        </article>
+      </div>
+    </section>
+
+    <% if (currentUser.mustChangePassword) { %>
+      <div class="flash flash-warning">
+        Change your password to complete account setup.
+      </div>
+    <% } %>
+
+    <section class="form-grid staff-dashboard-grid">
+      <form action="/dashboard" method="post" class="form-card stack-form profile-editor">
+        <div class="dashboard-section-head">
+          <div>
+            <span class="eyebrow">Profile Editor</span>
+            <h2>Update your staff details</h2>
+          </div>
+        </div>
+
+        <div class="profile-editor-sections">
+          <section class="editor-section">
+            <h2>Identity</h2>
+            <div class="profile-editor-grid">
+              <label>
+                <span>Full name</span>
+                <input type="text" name="fullName" value="<%= profile.fullName %>" required />
+              </label>
+              <label>
+                <span>Login email</span>
+                <input type="email" name="loginEmail" value="<%= profile.email %>" required />
+              </label>
+              <div class="visibility-field">
+                <label class="field-shell">
+                  <span>Public email address</span>
+                  <input type="email" name="emailAddress" value="<%= profile.emailAddress || '' %>" />
+                </label>
+                <label class="toggle-row toggle-row-compact">
+                  <span>Show on public profile</span>
+                  <span class="toggle-switch">
+                    <input type="checkbox" name="showEmailAddress" <%= profile.showEmailAddress ? "checked" : "" %> />
+                    <span class="toggle-slider"></span>
+                  </span>
+                </label>
+              </div>
+              <label>
+                <span>Staff category</span>
+                <select name="staffCategory">
+                  <% formOptions.staffCategories.forEach((item) => { %>
+                    <option value="<%= item %>" <%= profile.staffCategory === item ? "selected" : "" %>><%= item %></option>
+                  <% }) %>
+                </select>
+              </label>
+              <label>
+                <span>Honourary / designation</span>
+                <select name="honoraryTitle">
+                  <option value="">Select honourary</option>
+                  <% formOptions.honoraryTitles.forEach((item) => { %>
+                    <option value="<%= item %>" <%= profile.honoraryTitle === item ? "selected" : "" %>><%= item %></option>
+                  <% }) %>
+                </select>
+              </label>
+              <label>
+                <span>Title</span>
+                <select name="title">
+                  <option value="">Select title</option>
+                  <% formOptions.titles.forEach((item) => { %>
+                    <option value="<%= item %>" <%= profile.title === item ? "selected" : "" %>><%= item %></option>
+                  <% }) %>
+                </select>
+              </label>
+              <div class="visibility-field">
+                <label class="field-shell">
+                  <span>Phone</span>
+                  <input type="text" name="phone" value="<%= profile.phone || '' %>" />
+                </label>
+                <label class="toggle-row toggle-row-compact">
+                  <span>Show on public profile</span>
+                  <span class="toggle-switch">
+                    <input type="checkbox" name="showPhone" <%= profile.showPhone ? "checked" : "" %> />
+                    <span class="toggle-slider"></span>
+                  </span>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <section class="editor-section">
+            <h2>Placement</h2>
+            <div class="profile-editor-grid">
+              <label>
+                <span>College</span>
+                <select name="college">
+                  <option value="">Select college</option>
+                  <% formOptions.colleges.forEach((item) => { %>
+                    <option value="<%= item %>" <%= profile.college === item ? "selected" : "" %>><%= item %></option>
+                  <% }) %>
+                </select>
+              </label>
+              <label>
+                <span>School</span>
+                <select name="schoolFaculty">
+                  <option value="">Select school</option>
+                  <% formOptions.schools.forEach((item) => { %>
+                    <option value="<%= item %>" <%= profile.schoolFaculty === item ? "selected" : "" %>><%= item %></option>
+                  <% }) %>
+                </select>
+              </label>
+              <label>
+                <span>Department</span>
+                <select name="department">
+                  <option value="">Select department</option>
+                  <% formOptions.departments.forEach((item) => { %>
+                    <option value="<%= item %>" <%= profile.department === item ? "selected" : "" %>><%= item %></option>
+                  <% }) %>
+                </select>
+              </label>
+              <div class="visibility-field">
+                <label class="field-shell">
+                  <span>Office address</span>
+                  <input type="text" name="officeAddress" value="<%= profile.officeAddress || '' %>" />
+                </label>
+                <label class="toggle-row toggle-row-compact">
+                  <span>Show on public profile</span>
+                  <span class="toggle-switch">
+                    <input type="checkbox" name="showOfficeAddress" <%= profile.showOfficeAddress ? "checked" : "" %> />
+                    <span class="toggle-slider"></span>
+                  </span>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <section class="editor-section">
+            <div>
+              <h2>Academic Links</h2>
+              <p class="section-copy">Turn each public link on or off without deleting the saved URL.</p>
+            </div>
+            <div class="profile-editor-grid visibility-grid">
+              <div class="visibility-field">
+                <label class="field-shell">
+                  <span>Scopus URL</span>
+                  <input type="url" name="scopusUrl" value="<%= profile.scopusUrl || '' %>" />
+                </label>
+                <label class="toggle-row toggle-row-compact">
+                  <span>Show on public profile</span>
+                  <span class="toggle-switch">
+                    <input type="checkbox" name="showScopusUrl" <%= profile.showScopusUrl ? "checked" : "" %> />
+                    <span class="toggle-slider"></span>
+                  </span>
+                </label>
+              </div>
+              <div class="visibility-field">
+                <label class="field-shell">
+                  <span>ORCID URL</span>
+                  <input type="url" name="orcidUrl" value="<%= profile.orcidUrl || '' %>" />
+                </label>
+                <label class="toggle-row toggle-row-compact">
+                  <span>Show on public profile</span>
+                  <span class="toggle-switch">
+                    <input type="checkbox" name="showOrcidUrl" <%= profile.showOrcidUrl ? "checked" : "" %> />
+                    <span class="toggle-slider"></span>
+                  </span>
+                </label>
+              </div>
+              <div class="visibility-field">
+                <label class="field-shell">
+                  <span>Google Scholar URL</span>
+                  <input type="url" name="googleScholarUrl" value="<%= profile.googleScholarUrl || '' %>" />
+                </label>
+                <label class="toggle-row toggle-row-compact">
+                  <span>Show on public profile</span>
+                  <span class="toggle-switch">
+                    <input type="checkbox" name="showGoogleScholarUrl" <%= profile.showGoogleScholarUrl ? "checked" : "" %> />
+                    <span class="toggle-slider"></span>
+                  </span>
+                </label>
+              </div>
+              <div class="visibility-field">
+                <label class="field-shell">
+                  <span>ResearchGate URL</span>
+                  <input type="url" name="researchGateUrl" value="<%= profile.researchGateUrl || '' %>" />
+                </label>
+                <label class="toggle-row toggle-row-compact">
+                  <span>Show on public profile</span>
+                  <span class="toggle-switch">
+                    <input type="checkbox" name="showResearchGateUrl" <%= profile.showResearchGateUrl ? "checked" : "" %> />
+                    <span class="toggle-slider"></span>
+                  </span>
+                </label>
+              </div>
+              <div class="visibility-field">
+                <label class="field-shell">
+                  <span>Open Science URL</span>
+                  <input type="url" name="openScienceUrl" value="<%= profile.openScienceUrl || '' %>" />
+                </label>
+                <label class="toggle-row toggle-row-compact">
+                  <span>Show on public profile</span>
+                  <span class="toggle-switch">
+                    <input type="checkbox" name="showOpenScienceUrl" <%= profile.showOpenScienceUrl ? "checked" : "" %> />
+                    <span class="toggle-slider"></span>
+                  </span>
+                </label>
+              </div>
+              <div class="visibility-field">
+                <label class="field-shell">
+                  <span>LinkedIn URL</span>
+                  <input type="url" name="linkedinUrl" value="<%= profile.linkedinUrl || '' %>" />
+                </label>
+                <label class="toggle-row toggle-row-compact">
+                  <span>Show on public profile</span>
+                  <span class="toggle-switch">
+                    <input type="checkbox" name="showLinkedinUrl" <%= profile.showLinkedinUrl ? "checked" : "" %> />
+                    <span class="toggle-slider"></span>
+                  </span>
+                </label>
+              </div>
+              <div class="visibility-field">
+                <label class="field-shell">
+                  <span>Google Drive CV link</span>
+                  <input type="url" name="cvUrl" value="<%= profile.cvUrl || '' %>" />
+                </label>
+                <label class="toggle-row toggle-row-compact">
+                  <span>Show on public profile</span>
+                  <span class="toggle-switch">
+                    <input type="checkbox" name="showCvUrl" <%= profile.showCvUrl ? "checked" : "" %> />
+                    <span class="toggle-slider"></span>
+                  </span>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <section class="editor-section">
+            <h2>Profile Content</h2>
+            <div class="profile-editor-grid profile-editor-grid-wide">
+              <label>
+                <span>Biography</span>
+                <textarea name="bio" rows="5"><%= profile.bio || '' %></textarea>
+              </label>
+              <label>
+                <span>Qualifications</span>
+                <textarea name="qualifications" rows="5"><%= profile.qualifications ? profile.qualifications.join("\n") : "" %></textarea>
+              </label>
+              <label>
+                <span>Research areas</span>
+                <textarea name="researchAreas" rows="5"><%= profile.researchAreas ? profile.researchAreas.join("\n") : "" %></textarea>
+              </label>
+              <label>
+                <span>New password</span>
+                <input type="password" name="newPassword" />
+              </label>
+            </div>
+          </section>
+        </div>
+
+        <button type="submit" class="button button-primary">Save Profile</button>
+      </form>
+
+      <div class="dashboard-sidebar-stack">
+        <form action="/dashboard/upload" method="post" enctype="multipart/form-data" class="form-card stack-form media-panel">
+          <div class="media-panel-copy">
+            <span class="eyebrow">Media</span>
+            <h2>Profile Image</h2>
+            <p class="card-copy">A clear profile image makes the public page feel complete and easier to identify.</p>
+          </div>
+          <div class="media-preview-shell">
+            <% if (profile.photoUrl) { %>
+              <img src="<%= profile.photoUrl %>" alt="<%= profile.fullName %>" class="preview-image media-preview-image" />
+            <% } else { %>
+              <div class="image-placeholder media-preview-placeholder">
+                <img src="/assets/bouesti-logo-clean.png" alt="BOUESTI logo" class="media-placeholder-logo" />
+              </div>
+            <% } %>
+          </div>
+          <label class="file-input-card">
+            <span>Choose profile photo</span>
+            <input type="file" name="photoFile" accept=".jpg,.jpeg,.png,.webp" />
+          </label>
+          <button type="submit" class="button button-primary">Upload Image</button>
+        </form>
+
+        <aside class="form-card stack-form workspace-tip-card">
+          <span class="eyebrow">Publishing Tips</span>
+          <h2>What strengthens your page</h2>
+          <ul class="feature-list workspace-tip-list">
+            <li>Add a short biography that explains your research direction.</li>
+            <li>List qualifications one per line for cleaner rendering.</li>
+            <li>Include at least one research link such as ORCID or Google Scholar.</li>
+            <li>Use an institutional or professional portrait where possible.</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+  </div>
+</main>
+
+<%- include("../partials/footer") %>

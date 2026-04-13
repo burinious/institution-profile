@@ -1,0 +1,221 @@
+<%- include("../partials/head", { title, pageClass, siteName }) %>
+<%- include("../partials/header", { currentUser, flash }) %>
+
+<main class="directory-section">
+  <div class="container">
+    <section class="directory-hero-card">
+      <div class="directory-hero-copy-block">
+        <span class="eyebrow">Staff Directory</span>
+        <h1>BOUESTI staff directory.</h1>
+        <% if (activeFilterCount) { %>
+          <div class="active-filter-list">
+            <% if (filters.staffCategory) { %><span><%= filters.staffCategory %></span><% } %>
+            <% if (filters.college) { %><span><%= filters.college %></span><% } %>
+            <% if (filters.schoolFaculty) { %><span><%= filters.schoolFaculty %></span><% } %>
+            <% if (filters.department) { %><span><%= filters.department %></span><% } %>
+          </div>
+        <% } %>
+      </div>
+      <div class="directory-stat-panel">
+        <div class="directory-stat-grid">
+          <div class="directory-summary directory-summary-primary">
+            <strong><%= totalResults %></strong>
+            <span>Visible Staff</span>
+          </div>
+          <div class="directory-summary soft">
+            <strong><%= directoryStats.totalColleges %></strong>
+            <span>Colleges</span>
+          </div>
+          <div class="directory-summary soft">
+            <strong><%= directoryStats.totalDepartments %></strong>
+            <span>Departments</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <form action="/prs/staff" method="get" class="staff-filter-bar">
+      <label>
+        <span>Staff type</span>
+        <select name="staffCategory">
+          <option value="">All staff</option>
+          <% filterOptions.staffCategories.forEach((item) => { %>
+            <option value="<%= item %>" <%= filters.staffCategory === item ? "selected" : "" %>><%= item %></option>
+          <% }) %>
+        </select>
+      </label>
+
+      <label>
+        <span>College</span>
+        <select name="college" id="collegeFilter">
+          <option value="">All colleges</option>
+          <% filterOptions.colleges.forEach((item) => { %>
+            <option value="<%= item %>" <%= filters.college === item ? "selected" : "" %>><%= item %></option>
+          <% }) %>
+        </select>
+      </label>
+
+      <label>
+        <span>School</span>
+        <select name="schoolFaculty" id="schoolFilter">
+          <option value="">All schools</option>
+          <% filterOptions.schools.forEach((item) => { %>
+            <option value="<%= item %>" <%= filters.schoolFaculty === item ? "selected" : "" %>><%= item %></option>
+          <% }) %>
+        </select>
+      </label>
+
+      <label>
+        <span>Department</span>
+        <select name="department" id="departmentFilter">
+          <option value="">All departments</option>
+          <% filterOptions.departments.forEach((item) => { %>
+            <option value="<%= item %>" <%= filters.department === item ? "selected" : "" %>><%= item %></option>
+          <% }) %>
+        </select>
+      </label>
+
+      <label>
+        <span>Show</span>
+        <select name="perPage">
+          <% allowedPerPage.forEach((size) => { %>
+            <option value="<%= size %>" <%= perPage === size ? "selected" : "" %>><%= size %> per page</option>
+          <% }) %>
+        </select>
+      </label>
+
+      <div class="filter-actions">
+        <button type="submit" class="button button-primary">Apply</button>
+        <a href="/prs/staff" class="button button-ghost">Reset</a>
+      </div>
+    </form>
+
+    <% if (!staffProfiles.length) { %>
+      <div class="empty-state">
+        <h2>No staff match this view.</h2>
+        <p>Adjust the filters or wait until more staff pages are published.</p>
+      </div>
+    <% } else { %>
+      <div class="staff-grid">
+        <% staffProfiles.forEach((profile) => { %>
+          <% const initials = (profile.fullName || "Staff")
+            .split(/\s+/)
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((part) => part[0].toUpperCase())
+            .join(""); %>
+          <article class="staff-card">
+            <div class="staff-card-link">
+              <div class="staff-card-media">
+                <% if (profile.photoUrl) { %>
+                  <img src="<%= profile.photoUrl %>" alt="<%= profile.fullName %>" class="staff-card-photo" />
+                <% } else { %>
+                  <div class="staff-card-fallback"><%= initials %></div>
+                <% } %>
+              </div>
+              <div class="staff-card-body">
+                <h3><%= profile.fullName %></h3>
+                <p class="staff-card-role"><%= profile.title || profile.staffCategory || profile.honoraryTitle || "Staff" %></p>
+                <% if (profile.showEmailAddress && (profile.emailAddress || profile.email)) { %>
+                  <p class="staff-email"><%= profile.emailAddress || profile.email %></p>
+                <% } %>
+                <div class="staff-card-actions">
+                  <a href="/prs/<%= profile.slug %>" class="button button-primary button-small button-block">View Profile</a>
+                </div>
+              </div>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+
+      <nav class="pagination-bar" aria-label="Staff pagination">
+        <div class="pagination-summary">
+          Page <strong><%= currentPage %></strong> of <strong><%= totalPages %></strong>
+        </div>
+        <div class="pagination-links">
+          <% if (currentPage > 1) { %>
+            <a href="<%= buildQuery({ page: currentPage - 1 }) %>" class="button button-ghost">Previous</a>
+          <% } %>
+          <% pageNumbers.forEach((pageNumber) => { %>
+            <a href="<%= buildQuery({ page: pageNumber }) %>" class="button <%= pageNumber === currentPage ? 'button-primary' : 'button-ghost' %>"><%= pageNumber %></a>
+          <% }) %>
+          <% if (currentPage < totalPages) { %>
+            <a href="<%= buildQuery({ page: currentPage + 1 }) %>" class="button button-ghost">Next</a>
+          <% } %>
+        </div>
+      </nav>
+    <% } %>
+  </div>
+</main>
+
+<script>
+  (() => {
+    const hierarchy = <%- JSON.stringify(academicHierarchy) %>;
+    const collegeSelect = document.getElementById("collegeFilter");
+    const schoolSelect = document.getElementById("schoolFilter");
+    const departmentSelect = document.getElementById("departmentFilter");
+
+    if (!collegeSelect || !schoolSelect || !departmentSelect) {
+      return;
+    }
+
+    const initialSchool = schoolSelect.value;
+    const initialDepartment = departmentSelect.value;
+
+    const unique = (values) => [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+
+    const allSchools = unique(Object.values(hierarchy).flatMap((schoolMap) => Object.keys(schoolMap)));
+
+    function departmentsForSelection(college, school) {
+      if (college && school && hierarchy[college] && hierarchy[college][school]) {
+        return hierarchy[college][school];
+      }
+
+      if (school) {
+        return unique(Object.values(hierarchy).flatMap((schoolMap) => schoolMap[school] || []));
+      }
+
+      if (college && hierarchy[college]) {
+        return unique(Object.values(hierarchy[college]).flat());
+      }
+
+      return unique(Object.values(hierarchy).flatMap((schoolMap) => Object.values(schoolMap).flat()));
+    }
+
+    function rebuildOptions(select, placeholder, values, selectedValue) {
+      const options = [`<option value="">${placeholder}</option>`]
+        .concat(
+          values.map((value) => {
+            const selected = value === selectedValue ? " selected" : "";
+            return `<option value="${value}"${selected}>${value}</option>`;
+          })
+        )
+        .join("");
+
+      select.innerHTML = options;
+    }
+
+    function syncFilters(preferredSchool = "", preferredDepartment = "") {
+      const college = collegeSelect.value;
+      const schools = college && hierarchy[college] ? Object.keys(hierarchy[college]) : allSchools;
+      const school = schools.includes(preferredSchool || schoolSelect.value)
+        ? (preferredSchool || schoolSelect.value)
+        : "";
+
+      rebuildOptions(schoolSelect, "All schools", unique(schools), school);
+
+      const departments = unique(departmentsForSelection(college, schoolSelect.value));
+      const department = departments.includes(preferredDepartment || departmentSelect.value)
+        ? (preferredDepartment || departmentSelect.value)
+        : "";
+
+      rebuildOptions(departmentSelect, "All departments", departments, department);
+    }
+
+    syncFilters(initialSchool, initialDepartment);
+    collegeSelect.addEventListener("change", () => syncFilters("", ""));
+    schoolSelect.addEventListener("change", () => syncFilters(schoolSelect.value, ""));
+  })();
+</script>
+
+<%- include("../partials/footer") %>

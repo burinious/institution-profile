@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#114737" />
+    <title><%= title %> | <%= siteName %></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="<%= pageClass || '' %> app-shell">
+    <script>
+      (() => {
+        const stateKey = "bouesti-sidebar-state";
+        const themeKey = "bouesti-theme";
+        const validStates = new Set(["expanded", "collapsed", "hidden"]);
+        let state = window.matchMedia("(max-width: 900px)").matches ? "hidden" : "expanded";
+        let theme = "light";
+
+        try {
+          const storedState = window.localStorage.getItem(stateKey);
+          if (validStates.has(storedState)) {
+            state = storedState;
+          }
+
+          const storedTheme = window.localStorage.getItem(themeKey);
+          if (storedTheme === "dark" || storedTheme === "light") {
+            theme = storedTheme;
+          }
+        } catch (error) {
+          state = "expanded";
+          theme = "light";
+        }
+
+        document.body.classList.add(`sidebar-${state}`);
+        document.body.classList.add(`theme-${theme}`);
+      })();
+    </script>

@@ -1,0 +1,283 @@
+<%
+  const navItems = [
+    {
+      href: "https://bouesti.edu.ng/",
+      label: "Home"
+    },
+    {
+      href: "/prs/staff",
+      label: "Directory"
+    }
+  ];
+
+  if (currentUser && currentUser.role === "admin") {
+    navItems.push(
+      { href: "/admin", label: "Admin" },
+      { href: "/admin/staff/manage", label: "Manage Staff" },
+      { href: "/admin/staff/new", label: "New Staff" },
+      { href: "/admin/options/manage", label: "Structure" }
+    );
+  } else if (currentUser && currentUser.role === "staff") {
+    navItems.push({ href: "/dashboard", label: "My Profile" });
+  }
+
+  const activePath = typeof pageClass === "string" ? pageClass : "";
+  const activeTitle = typeof title === "string" ? title : "";
+%>
+
+<aside class="app-sidebar" id="app-sidebar" aria-label="Primary">
+  <div class="sidebar-shell">
+    <div class="sidebar-head">
+      <div class="sidebar-control-row">
+        <button
+          type="button"
+          class="sidebar-control"
+          id="sidebar-collapse"
+          aria-controls="app-sidebar"
+          aria-label="Collapse sidebar"
+          title="Compact sidebar"
+        >
+          Compact
+        </button>
+        <button
+          type="button"
+          class="sidebar-control"
+          id="sidebar-hide"
+          aria-controls="app-sidebar"
+          aria-label="Hide sidebar"
+          title="Hide sidebar"
+        >
+          Hide
+        </button>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <% navItems.forEach((item) => {
+        const isActive =
+          item.href === "/prs/staff"
+            ? activePath === "page-listing" || activePath === "page-profile"
+            : item.href === "/login"
+              ? activePath === "page-auth"
+              : item.href === "/dashboard"
+                ? activePath === "page-staff"
+                : item.href === "/admin"
+                  ? activeTitle === "Admin Dashboard"
+                  : item.href === "/admin/staff/manage"
+                    ? activeTitle === "Manage Staff" || activeTitle.startsWith("Edit ")
+                    : item.href === "/admin/staff/new"
+                      ? activeTitle === "Create Staff Account"
+                      : item.href === "/admin/options/manage"
+                        ? activeTitle === "Manage Directory Structure"
+                        : false;
+      %>
+        <a
+          href="<%= item.href %>"
+          class="sidebar-link <%= isActive ? "is-active" : "" %>"
+          title="<%= item.label %>"
+        >
+          <span class="sidebar-link-copy">
+            <strong><%= item.label %></strong>
+          </span>
+        </a>
+      <% }) %>
+    </nav>
+
+    <div class="sidebar-foot">
+      <% if (currentUser) { %>
+        <form action="/logout" method="post" class="sidebar-logout-form">
+          <button type="submit" class="button button-ghost sidebar-logout-button">
+            <span class="sidebar-link-copy">
+              <strong>Logout</strong>
+            </span>
+          </button>
+        </form>
+      <% } %>
+    </div>
+  </div>
+</aside>
+
+<div class="sidebar-overlay" id="sidebar-overlay" hidden></div>
+
+<header class="site-header">
+  <div class="container nav-shell brand-only-shell">
+    <button
+      type="button"
+      class="topbar-menu-button"
+      id="topbar-menu-button"
+      aria-controls="app-sidebar"
+      aria-label="Open navigation"
+      title="Open navigation"
+    >
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <div class="brand-title-group">
+      <strong>Bamidele Olumilua University of Education, Science &amp; Technology, Ikere-Ekiti</strong>
+      <small>Staff Directory</small>
+    </div>
+    <a href="/" class="brand-logo-link" aria-label="BOUESTI Staff Directory home">
+      <span class="brand-logo-shell">
+        <img src="/assets/bouesti-logo-clean.png" alt="BOUESTI logo" class="brand-logo" />
+      </span>
+    </a>
+  </div>
+</header>
+
+<div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="true"></div>
+<script>
+  (() => {
+    const body = document.body;
+    const overlay = document.getElementById("sidebar-overlay");
+    const collapseButton = document.getElementById("sidebar-collapse");
+    const hideButton = document.getElementById("sidebar-hide");
+    const topbarMenuButton = document.getElementById("topbar-menu-button");
+    const toastStack = document.getElementById("toast-stack");
+    const stateKey = "bouesti-sidebar-state";
+    const visibleStateKey = "bouesti-sidebar-visible-state";
+    const validStates = new Set(["expanded", "collapsed", "hidden"]);
+
+    const getState = () => {
+      if (body.classList.contains("sidebar-collapsed")) {
+        return "collapsed";
+      }
+
+      if (body.classList.contains("sidebar-hidden")) {
+        return "hidden";
+      }
+
+      return "expanded";
+    };
+
+    const setState = (nextState) => {
+      if (!validStates.has(nextState)) {
+        return;
+      }
+
+      body.classList.remove("sidebar-expanded", "sidebar-collapsed", "sidebar-hidden");
+      body.classList.add(`sidebar-${nextState}`);
+
+      if (nextState !== "hidden") {
+        try {
+          window.localStorage.setItem(visibleStateKey, nextState);
+        } catch (error) {
+          // Ignore localStorage failures and keep runtime behavior.
+        }
+      }
+
+      try {
+        window.localStorage.setItem(stateKey, nextState);
+      } catch (error) {
+        // Ignore localStorage failures and keep runtime behavior.
+      }
+
+      if (overlay) {
+        const shouldShowOverlay =
+          window.matchMedia("(max-width: 900px)").matches && nextState !== "hidden";
+        overlay.hidden = !shouldShowOverlay;
+      }
+
+      if (collapseButton) {
+        collapseButton.setAttribute(
+          "aria-label",
+          nextState === "collapsed" ? "Expand sidebar" : "Collapse sidebar"
+        );
+        collapseButton.title = nextState === "collapsed" ? "Expand sidebar" : "Compact sidebar";
+      }
+    };
+
+    const restoreVisibleState = () => {
+      let visibleState = "expanded";
+
+      try {
+        const storedVisibleState = window.localStorage.getItem(visibleStateKey);
+        if (storedVisibleState === "collapsed" || storedVisibleState === "expanded") {
+          visibleState = storedVisibleState;
+        }
+      } catch (error) {
+        visibleState = "expanded";
+      }
+
+      setState(visibleState);
+    };
+
+    if (collapseButton) {
+      collapseButton.addEventListener("click", () => {
+        const nextState = getState() === "collapsed" ? "expanded" : "collapsed";
+        setState(nextState);
+      });
+    }
+
+    if (hideButton) {
+      hideButton.addEventListener("click", () => {
+        setState("hidden");
+      });
+    }
+
+    if (topbarMenuButton) {
+      topbarMenuButton.addEventListener("click", restoreVisibleState);
+    }
+
+    if (overlay) {
+      overlay.addEventListener("click", () => {
+        setState("hidden");
+      });
+    }
+
+    window.addEventListener("resize", () => {
+      setState(getState());
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && getState() !== "hidden") {
+        setState("hidden");
+      }
+    });
+
+    const closeToast = (toast) => {
+      if (!toast) {
+        return;
+      }
+
+      toast.classList.add("toast-leaving");
+      window.setTimeout(() => {
+        toast.remove();
+      }, 220);
+    };
+
+    window.showToast = (message, type = "success") => {
+      if (!toastStack || !message) {
+        return;
+      }
+
+      const toast = document.createElement("div");
+      toast.className = `flash flash-${type} toast`;
+      toast.setAttribute("role", "status");
+      toast.innerHTML = `
+        <div class="toast-copy"></div>
+        <button type="button" class="toast-dismiss" aria-label="Dismiss notification">&times;</button>
+      `;
+
+      const copy = toast.querySelector(".toast-copy");
+      const dismissButton = toast.querySelector(".toast-dismiss");
+
+      if (copy) {
+        copy.textContent = message;
+      }
+
+      if (dismissButton) {
+        dismissButton.addEventListener("click", () => closeToast(toast));
+      }
+
+      toastStack.appendChild(toast);
+      window.setTimeout(() => closeToast(toast), 4200);
+    };
+
+    setState(getState());
+
+    <% if (flash) { %>
+      window.showToast(<%- JSON.stringify(flash.message) %>, <%- JSON.stringify(flash.type) %>);
+    <% } %>
+  })();
+</script>
