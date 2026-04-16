@@ -8,6 +8,7 @@ const {
   listPublishedProfiles
 } = require("../lib/store");
 const { summarizePublishedProfiles } = require("../lib/helpers");
+const { isAdminRole } = require("../middleware/auth");
 
 const router = express.Router();
 const allowedPerPage = [12, 24, 36, 48];
@@ -48,7 +49,7 @@ function listDepartmentsForSchool(school, hierarchy, college = "") {
 
 router.get("/", (req, res) => {
   if (req.session.user) {
-    if (req.session.user.role === "admin") {
+    if (isAdminRole(req.session.user.role)) {
       return res.redirect("/admin");
     }
 

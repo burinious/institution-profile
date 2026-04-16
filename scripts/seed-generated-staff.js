@@ -4,7 +4,14 @@ const bcrypt = require("bcryptjs");
 
 const dataPath = path.join(__dirname, "..", "data", "db.json");
 const loginSheetPath = path.join(__dirname, "..", "data", "generated-staff-logins.csv");
+const testerLoginSheetPath = path.join(__dirname, "..", "data", "tester-logins.csv");
 const defaultPassword = "Staff@12345";
+const subAdminCredentials = {
+  name: "Directory Sub Admin",
+  email: "subadmin@bouesti.edu.ng",
+  password: "SubAdmin@12345",
+  role: "sub-admin"
+};
 
 const academicUnits = [
   {
@@ -1459,6 +1466,39 @@ function upsertStaffRecord(state, record) {
   }
 }
 
+function upsertSubAdmin(state, passwordHash) {
+  const existingIndex = state.users.findIndex(
+    (entry) => entry.email === subAdminCredentials.email
+  );
+  const now = new Date().toISOString();
+
+  if (existingIndex >= 0) {
+    state.users[existingIndex] = {
+      ...state.users[existingIndex],
+      name: subAdminCredentials.name,
+      email: subAdminCredentials.email,
+      role: subAdminCredentials.role,
+      passwordHash,
+      mustChangePassword: false,
+      updatedAt: now
+    };
+    return state.users[existingIndex];
+  }
+
+  const user = {
+    id: createId("usr"),
+    name: subAdminCredentials.name,
+    email: subAdminCredentials.email,
+    role: subAdminCredentials.role,
+    passwordHash,
+    mustChangePassword: false,
+    createdAt: now,
+    updatedAt: now
+  };
+  state.users.push(user);
+  return user;
+}
+
 async function main() {
   const raw = fs.readFileSync(dataPath, "utf8");
   const state = JSON.parse(raw);
@@ -1481,6 +1521,8 @@ async function main() {
     record.user.passwordHash = await bcrypt.hash(record.password, 10);
     upsertStaffRecord(state, record);
   }
+
+  upsertSubAdmin(state, await bcrypt.hash(subAdminCredentials.password, 10));
 
   state.profileOptions.honoraryTitles = mergeUnique(state.profileOptions.honoraryTitles, [
     "Dr.",
@@ -1511,11 +1553,15 @@ async function main() {
 
   fs.writeFileSync(dataPath, JSON.stringify(state, null, 2), "utf8");
 
-  const csvLines = [
-    "fullName,email,password,staffCategory,title,department"
-  ];
+  const testerAcademicRecord = generatedRecords.find(
+    (record) => record.profile.staffCategory === "Academic Staff"
+  );
+  const testerNonTeachingRecord = generatedRecords.find(
+    (record) => record.profile.staffCategory === "Non Teaching Staff"
+  );
+  const csvLines = ["fullName,email,password,staffCategory,title,department"];
 
-  generatedRecords
+  [...generatedRecords]
     .sort((left, right) => left.profile.fullName.localeCompare(right.profile.fullName))
     .forEach((record) => {
       csvLines.push(
@@ -1534,6 +1580,41 @@ async function main() {
 
   fs.writeFileSync(loginSheetPath, `${csvLines.join("\n")}\n`, "utf8");
 
+  const testerRows = [
+    [
+      "Sub Admin",
+      subAdminCredentials.name,
+      subAdminCredentials.email,
+      subAdminCredentials.password,
+      subAdminCredentials.role,
+      "Admin dashboard access"
+    ],
+    [
+      "Academic",
+      testerAcademicRecord.profile.fullName,
+      testerAcademicRecord.email,
+      testerAcademicRecord.password,
+      testerAcademicRecord.profile.staffCategory,
+      testerAcademicRecord.profile.title
+    ],
+    [
+      "Non Teaching",
+      testerNonTeachingRecord.profile.fullName,
+      testerNonTeachingRecord.email,
+      testerNonTeachingRecord.password,
+      testerNonTeachingRecord.profile.staffCategory,
+      testerNonTeachingRecord.profile.title
+    ]
+  ];
+  const testerLines = [
+    "profileType,fullName,email,password,roleOrCategory,titleOrAccess",
+    ...testerRows.map((row) =>
+      row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")
+    )
+  ];
+
+  fs.writeFileSync(testerLoginSheetPath, `${testerLines.join("\n")}\n`, "utf8");
+
   const academicCount = generatedRecords.filter(
     (record) => record.profile.staffCategory === "Academic Staff"
   ).length;
@@ -1547,7 +1628,13 @@ async function main() {
         createdOrUpdated: generatedRecords.length,
         academicCount,
         nonTeachingCount,
-        loginSheetPath
+        loginSheetPath,
+        testerLoginSheetPath,
+        testerCredentials: {
+          subAdmin: subAdminCredentials.email,
+          academic: testerAcademicRecord.email,
+          nonTeaching: testerNonTeachingRecord.email
+        }
       },
       null,
       2

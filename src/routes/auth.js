@@ -2,12 +2,13 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const { findProfileByUserId, findUserByEmail, listPublishedProfiles } = require("../lib/store");
 const { summarizePublishedProfiles } = require("../lib/helpers");
+const { isAdminRole } = require("../middleware/auth");
 
 const router = express.Router();
 
 router.get("/login", (req, res) => {
   if (req.session.user) {
-    if (req.session.user.role === "admin") {
+    if (isAdminRole(req.session.user.role)) {
       return res.redirect("/admin");
     }
 
@@ -49,7 +50,7 @@ router.post("/login", async (req, res) => {
     profileId: profile ? profile.id : null
   };
 
-  if (user.role === "admin") {
+  if (isAdminRole(user.role)) {
     return res.redirect("/admin");
   }
 

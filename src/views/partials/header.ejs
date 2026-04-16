@@ -10,7 +10,7 @@
     }
   ];
 
-  if (currentUser && currentUser.role === "admin") {
+  if (currentUser && (currentUser.role === "admin" || currentUser.role === "sub-admin")) {
     navItems.push(
       { href: "/admin", label: "Admin" },
       { href: "/admin/staff/manage", label: "Manage Staff" },

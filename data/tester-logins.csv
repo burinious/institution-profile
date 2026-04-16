@@ -1,0 +1,4 @@
+profileType,fullName,email,password,roleOrCategory,titleOrAccess
+"Sub Admin","Directory Sub Admin","subadmin@bouesti.edu.ng","SubAdmin@12345","sub-admin","Admin dashboard access"
+"Academic","Dr. Adebisi Akinola","adebisi.akinola@bouesti.edu.ng","Staff@12345","Academic Staff","Senior Lecturer"
+"Non Teaching","Mrs. Abiola Adegoke","abiola.adegoke@bouesti.edu.ng","Staff@12345","Non Teaching Staff","Senior Administrative Officer"

@@ -5,6 +5,10 @@ function attachUser(req, res, next) {
   next();
 }
 
+function isAdminRole(role) {
+  return role === "admin" || role === "sub-admin";
+}
+
 function requireAuth(req, res, next) {
   if (!req.session.user) {
     req.session.flash = { type: "error", message: "Please log in to continue." };
@@ -15,7 +19,7 @@ function requireAuth(req, res, next) {
 }
 
 function requireAdmin(req, res, next) {
-  if (!req.session.user || req.session.user.role !== "admin") {
+  if (!req.session.user || !isAdminRole(req.session.user.role)) {
     req.session.flash = { type: "error", message: "Admin access is required." };
     return res.redirect("/login");
   }
@@ -34,6 +38,7 @@ function requireStaff(req, res, next) {
 
 module.exports = {
   attachUser,
+  isAdminRole,
   requireAdmin,
   requireAuth,
   requireStaff
